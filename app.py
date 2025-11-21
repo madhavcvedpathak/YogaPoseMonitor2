@@ -23,9 +23,11 @@ from firebase_admin import credentials, firestore, auth
 app = Flask(__name__)
 
 # Directories (for report storage)
-REPORTS_DIR = "reports"
+# FIX 1: Use the Vercel-writable /tmp directory for temporary reports.
+REPORTS_DIR = "/tmp/reports" 
 os.makedirs(REPORTS_DIR, exist_ok=True)
-os.makedirs("live_json", exist_ok=True)
+
+# FIX 2: REMOVED os.makedirs("live_json", exist_ok=True) which caused the crash.
 
 # --- FIREBASE SETUP (Restored Logic) ---
 try:
@@ -60,7 +62,7 @@ current_user_uid = None
 current_user_display_name = "User"
 last_report_path = None
 
-# --- JWT DECORATOR (Restored) ---
+# --- JWT DECORATOR (UNCHANGED) ---
 def jwt_required(f):
     """Decorator to protect routes, requiring a valid Firebase ID Token (JWT)."""
     @wraps(f)
@@ -96,6 +98,7 @@ def generate_pdf_report(user_name, end_time):
     global last_report_path
     
     timestamp = end_time.strftime("%Y%m%d_%H%M%S")
+    # Reports are saved to the /tmp folder path defined in REPORTS_DIR
     report_path = os.path.join(REPORTS_DIR, f"{user_name}_AyurSutra_Report_{timestamp}.pdf")
     
     doc = SimpleDocTemplate(report_path, pagesize=letter)
@@ -183,7 +186,7 @@ def generate_pdf_report(user_name, end_time):
 # --- END PDF GENERATION ---
 
 
-# --- FIREBASE STORAGE FUNCTION (Restored) ---
+# --- FIREBASE STORAGE FUNCTION (UNCHANGED) ---
 def save_session_to_firestore(uid, session_data):
     """Saves the session data to the Firestore database."""
     if db is None: return False
